@@ -1,7 +1,7 @@
 package com.bignerdranch.android.photogallery;
 
 /**
- * Created by tonyk_000 on 1/18/2016.
+ * This is for parsing the JSON into what we can use for our app.
  */
 public class GalleryItem {
     private String mCaption;
