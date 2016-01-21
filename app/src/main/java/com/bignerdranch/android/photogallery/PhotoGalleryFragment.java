@@ -5,13 +5,18 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * Created by tonyk_000 on 1/15/2016.
@@ -33,7 +38,10 @@ public class PhotoGalleryFragment extends Fragment {
         //retains the fragment so taht rotation does not repeatedly fire off new AsyncTasks to fetch data
         setRetainInstance(true);
         //this starts the AsyncTask and fires up the background thread and calls doInBackground
-        new FetchItemsTask().execute();
+
+            RetrofitInterface mRetrofitInterface = RetrofitInterface.retrofit.create(RetrofitInterface.class);
+            Call<List<GalleryItem>> call = mRetrofitInterface.flickrPhotos();
+            new FetchItemsTask().execute(call);
     }
 
     @Override
@@ -56,10 +64,17 @@ public class PhotoGalleryFragment extends Fragment {
 
     //third parameter is the result produced by AsyncTask. It sets the value returned by doInBackground,
     //as wellas the type of onPostExecute's input parameter
-    private class FetchItemsTask extends AsyncTask<Void,Void,List<GalleryItem>>{
+    public class FetchItemsTask extends AsyncTask<Call,Void,List<GalleryItem>>{
         @Override
-        protected List<GalleryItem> doInBackground(Void... params){
-            return new FlickrFetchr().fetchItems();
+        protected List<GalleryItem> doInBackground(Call... params){
+            try {
+                Call<List<GalleryItem>> call = params[0];
+                Response<List<GalleryItem>> response = call.execute();
+                return response.body();
+            } catch (IOException ioe){
+                Log.e(TAG, "Failed to fetch items", ioe);
+            }
+            return null;
         }
 
         //onPostExecute is run on the main thread, after doInBackground completes
