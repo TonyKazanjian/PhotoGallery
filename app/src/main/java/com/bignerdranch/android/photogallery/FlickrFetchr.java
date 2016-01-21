@@ -3,7 +3,6 @@ package com.bignerdranch.android.photogallery;
 import android.net.Uri;
 import android.util.Log;
 
-import com.google.gson.FieldNamingStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -12,7 +11,6 @@ import org.json.JSONException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -66,7 +64,7 @@ public class FlickrFetchr {
         try {
             String url = Uri.parse("https://api.flickr.com/services/rest/")
                     .buildUpon()
-                    .appendQueryParameter("method", "flickr.mFlickrPhotos.getRecent")
+                    .appendQueryParameter("method", "flickr.mFlickrPhotos.photo.getRecent")
                     .appendQueryParameter("api_key", API_KEY)
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
@@ -96,32 +94,32 @@ public class FlickrFetchr {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
 
-//        JSONObject photosJsonObject = jsonBody.getJSONObject("flickrPhotos");
+//        JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
 //        JSONArray photoJsonArray = photosJsonObject.getJSONArray("photo");
-//
+
 //        for (int i = 0; i < photoJsonArray.length(); i++){
 //            JSONObject photoJsonObject = photoJsonArray.getJSONObject(i);
 //
 //            GalleryItem item = new GalleryItem();
-//            item.setId("id");
-//            item.setCaption("title");
-//            items.add(item);
+//            item.setId(photoJsonObject.getString("id"));
+//            item.setCaption(photoJsonObject.getString("title"));
 
-        gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
-            @Override
-            public String translateName(Field f) {
-                switch (f.getName()) {
-                    case "mId":
-                        return "id";
-                    case "mCaption":
-                        return "title";
-                    case "mUrl":
-                        return "url_s";
-                    default:
-                        return f.getName();
-                }
-            }
-        });
+
+//        gsonBuilder.setFieldNamingStrategy(new FieldNamingStrategy() {
+//            @Override
+//            public String translateName(Field f) {
+//                switch (f.getName()) {
+//                    case "mId":
+//                        return "id";
+//                    case "mCaption":
+//                        return "title";
+//                    case "mUrl":
+//                        return "url_s";
+//                    default:
+//                        return f.getName();
+//                }
+//            }
+//        });
 
         Flickr flickr = gson.fromJson(jsonBody, Flickr.class);
 
@@ -133,7 +131,7 @@ public class FlickrFetchr {
             items.add(item);
         }
 
-//
+
 //            if (!photoJsonObject.has("url_s")){
 //                continue;
 //            }
