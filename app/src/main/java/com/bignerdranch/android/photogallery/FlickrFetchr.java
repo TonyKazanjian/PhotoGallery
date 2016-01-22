@@ -12,7 +12,7 @@ import retrofit2.Call;
 /**
  * Created by tonyk_000 on 1/15/2016.
  */
-public class FlickrFetchr implements RetrofitInterface{
+public class FlickrFetchr implements FlickrService {
 
     private static final String TAG = "FlickrFetchr";
     private static final String API_KEY = "5907a0314289bdcdb382af38cc33d6dc";
@@ -56,8 +56,8 @@ public class FlickrFetchr implements RetrofitInterface{
 //
 //        try {
 //
-//            RetrofitInterface mRetrofitInterface = RetrofitInterface.retrofit.create(RetrofitInterface.class);
-//            Call<List<Photos>> call = mRetrofitInterface.flickrPhotos();
+//            FlickrService mRetrofitInterface = FlickrService.retrofit.create(FlickrService.class);
+//            Call<List<Photos>> call = mRetrofitInterface.getFlickrPhotos();
 //            List<Photos> result = call.execute().body();
 //        } catch (IOException ioe){
 //            Log.e(TAG, "Failed to fetch items", ioe);
@@ -65,7 +65,7 @@ public class FlickrFetchr implements RetrofitInterface{
 //    }
 
     @Override
-    public Call<List<GalleryItem>> flickrPhotos() {
+    public Call<List<GalleryItem>> getFlickrPhotos() {
         return null;
     }
 

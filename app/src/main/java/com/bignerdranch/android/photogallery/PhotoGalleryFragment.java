@@ -39,8 +39,8 @@ public class PhotoGalleryFragment extends Fragment {
         setRetainInstance(true);
         //this starts the AsyncTask and fires up the background thread and calls doInBackground
 
-            RetrofitInterface mRetrofitInterface = RetrofitInterface.retrofit.create(RetrofitInterface.class);
-            Call<List<GalleryItem>> call = mRetrofitInterface.flickrPhotos();
+            FlickrService mFlickrService = FlickrService.retrofit.create(FlickrService.class);
+            Call<List<GalleryItem>> call = mFlickrService.getFlickrPhotos();
             new FetchItemsTask().execute(call);
     }
 

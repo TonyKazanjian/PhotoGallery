@@ -10,7 +10,7 @@ import retrofit2.http.GET;
 /**
  * Created by tonyk_000 on 1/20/2016.
  */
-public interface RetrofitInterface {
+public interface FlickrService {
 //    @GET("http://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key=5907a0314289bdcdb382af38cc33d6dc&format=json&nojsoncallback=1");
 
 //    @GET("/rest/")
@@ -19,11 +19,11 @@ public interface RetrofitInterface {
 
    String API_KEY = "5907a0314289bdcdb382af38cc33d6dc";
 
-    @GET("/?method=flickr.photos.getRecent&api_key="+API_KEY+"&format=json&nojsoncallback=1")
-    Call<List<GalleryItem>> flickrPhotos();
+    @GET("?method=flickr.photos.getRecent&api_key="+API_KEY+"&format=json&nojsoncallback=1")
+    Call<List<GalleryItem>> getFlickrPhotos(); //annotated by previous line
 
-     Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl("https://api.flickr.com/services/rest")
+         Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl("https://api.flickr.com/services/rest/")
             .addConverterFactory(GsonConverterFactory.create())
             .build();
 }
