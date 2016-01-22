@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
 
 import retrofit2.Call;
 
@@ -65,7 +64,7 @@ public class FlickrFetchr implements FlickrService {
 //    }
 
     @Override
-    public Call<List<GalleryItem>> getFlickrPhotos() {
+    public Call<Photos> getFlickrPhotos() {
         return null;
     }
 

@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -26,7 +25,7 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
 
     private RecyclerView mPhotoRecyclerView;
-    private List<GalleryItem> mItems = new ArrayList<>();
+    private Photos mItems;
 
     public static PhotoGalleryFragment newInstance(){
         return new PhotoGalleryFragment();
@@ -40,7 +39,7 @@ public class PhotoGalleryFragment extends Fragment {
         //this starts the AsyncTask and fires up the background thread and calls doInBackground
 
             FlickrService mFlickrService = FlickrService.retrofit.create(FlickrService.class);
-            Call<List<GalleryItem>> call = mFlickrService.getFlickrPhotos();
+            Call<Photos> call = mFlickrService.getFlickrPhotos();
             new FetchItemsTask().execute(call);
     }
 
@@ -51,25 +50,23 @@ public class PhotoGalleryFragment extends Fragment {
         mPhotoRecyclerView = (RecyclerView)v.findViewById(R.id.fragment_photo_gallery_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
 
-        setupAdapter();
-
         return v;
     }
 
     private void setupAdapter(){
         if (isAdded()){ //this confirms that the fragment has been added to the activity, and that the activity will not be null
-            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
+            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems.getPhoto()));
         }
     }
 
     //third parameter is the result produced by AsyncTask. It sets the value returned by doInBackground,
     //as wellas the type of onPostExecute's input parameter
-    public class FetchItemsTask extends AsyncTask<Call,Void,List<GalleryItem>>{
+    public class FetchItemsTask extends AsyncTask<Call,Void, Photos>{
         @Override
-        protected List<GalleryItem> doInBackground(Call... params){
+        protected Photos doInBackground(Call... params){
             try {
-                Call<List<GalleryItem>> call = params[0];
-                Response<List<GalleryItem>> response = call.execute();
+                Call<Photos> call = params[0];
+                Response<Photos> response = call.execute();
                 return response.body();
             } catch (IOException ioe){
                 Log.e(TAG, "Failed to fetch items", ioe);
@@ -81,7 +78,7 @@ public class PhotoGalleryFragment extends Fragment {
         //accepts as input the list you fetched and returned inside doInBackground(...), puts it in mItems,
         //and updates the adapter
         @Override
-        protected void onPostExecute(List<GalleryItem> items){
+        protected void onPostExecute(Photos items){
             mItems = items;
             setupAdapter();
         }
@@ -124,7 +121,13 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return mGalleryItems.size();
+
+            if (mGalleryItems != null){
+                return mGalleryItems.size();
+            }
+            else {
+                return 0;
+            }
         }
     }
 }

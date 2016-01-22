@@ -1,7 +1,5 @@
 package com.bignerdranch.android.photogallery;
 
-import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.GsonConverterFactory;
 import retrofit2.Retrofit;
@@ -20,7 +18,7 @@ public interface FlickrService {
    String API_KEY = "5907a0314289bdcdb382af38cc33d6dc";
 
     @GET("?method=flickr.photos.getRecent&api_key="+API_KEY+"&format=json&nojsoncallback=1")
-    Call<List<GalleryItem>> getFlickrPhotos(); //annotated by previous line
+    Call<Photos> getFlickrPhotos(); //annotated by previous line
 
          Retrofit retrofit = new Retrofit.Builder()
             .baseUrl("https://api.flickr.com/services/rest/")

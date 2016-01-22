@@ -4,36 +4,28 @@ package com.bignerdranch.android.photogallery;
  * Created by tonyk_000 on 1/18/2016.
  */
 public class GalleryItem {
-    private String mCaption;
-    private String mId;
-    private String mUrl;
+    private String title;
+    private String id;
+
 
     @Override
     public String toString(){
-        return mCaption;
+        return title;
     }
 
     public String getCaption() {
-        return mCaption;
+        return title;
     }
 
     public void setCaption(String caption) {
-        mCaption = caption;
+        title = caption;
     }
 
     public String getId() {
-        return mId;
+        return id;
     }
 
     public void setId(String id) {
-        mId = id;
-    }
-
-    public String getUrl() {
-        return mUrl;
-    }
-
-    public void setUrl(String url) {
-        mUrl = url;
+        this.id = id;
     }
 }
