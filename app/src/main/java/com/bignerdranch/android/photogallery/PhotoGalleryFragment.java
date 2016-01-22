@@ -21,7 +21,7 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
 
     private RecyclerView mPhotoRecyclerView;
-    private List<GalleryItem> mItems = new ArrayList<>();
+    private List<FlickrResponse.PhotosEntity.PhotoEntity> mItems = new ArrayList<>();
 
     public static PhotoGalleryFragment newInstance(){
         return new PhotoGalleryFragment();
@@ -56,9 +56,9 @@ public class PhotoGalleryFragment extends Fragment {
 
     //third parameter is the result produced by AsyncTask. It sets the value returned by doInBackground,
     //as wellas the type of onPostExecute's input parameter
-    private class FetchItemsTask extends AsyncTask<Void,Void,List<GalleryItem>>{
+    private class FetchItemsTask extends AsyncTask<Void,Void,List<FlickrResponse.PhotosEntity.PhotoEntity>>{
         @Override
-        protected List<GalleryItem> doInBackground(Void... params){
+        protected List<FlickrResponse.PhotosEntity.PhotoEntity> doInBackground(Void... params){
             return new FlickrFetchr().fetchItems();
         }
 
@@ -66,7 +66,7 @@ public class PhotoGalleryFragment extends Fragment {
         //accepts as input the list you fetched and returned inside doInBackground(...), puts it in mItems,
         //and updates the adapter
         @Override
-        protected void onPostExecute(List<GalleryItem> items){
+        protected void onPostExecute(List<FlickrResponse.PhotosEntity.PhotoEntity> items){
             mItems = items;
             setupAdapter();
         }
@@ -81,17 +81,17 @@ public class PhotoGalleryFragment extends Fragment {
             mTitleTextView = (TextView) itemView;
         }
 
-        public void bindGalleryItem(GalleryItem item){
+        public void bindGalleryItem(FlickrResponse.PhotosEntity.PhotoEntity item){
             mTitleTextView.setText(item.toString());
         }
     }
 
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder>{
 
-        private List<GalleryItem> mGalleryItems;
+        private List<FlickrResponse.PhotosEntity.PhotoEntity> mPhotoEntities;
 
-        public PhotoAdapter(List<GalleryItem> galleryItems){
-            mGalleryItems = galleryItems;
+        public PhotoAdapter(List<FlickrResponse.PhotosEntity.PhotoEntity> photoEntities){
+            mPhotoEntities = photoEntities;
         }
 
         @Override
@@ -102,14 +102,14 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(PhotoHolder holder, int position) {
-            GalleryItem galleryItem = mGalleryItems.get(position);
-            holder.bindGalleryItem(galleryItem);
+            FlickrResponse.PhotosEntity.PhotoEntity photoEntity= mPhotoEntities.get(position);
+            holder.bindGalleryItem(photoEntity);
 
         }
 
         @Override
         public int getItemCount() {
-            return mGalleryItems.size();
+            return mPhotoEntities.size();
         }
     }
 }
