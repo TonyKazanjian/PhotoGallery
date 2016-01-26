@@ -1,20 +1,18 @@
 package com.bignerdranch.android.photogallery;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
@@ -25,7 +23,7 @@ public class PhotoGalleryFragment extends Fragment {
     private static final String TAG = "PhotoGalleryFragment";
 
     private RecyclerView mPhotoRecyclerView;
-    private Photos mItems;
+    private FlickrResponse mItems;
 
     public static PhotoGalleryFragment newInstance(){
         return new PhotoGalleryFragment();
@@ -39,8 +37,20 @@ public class PhotoGalleryFragment extends Fragment {
         //this starts the AsyncTask and fires up the background thread and calls doInBackground
 
             FlickrService mFlickrService = FlickrService.retrofit.create(FlickrService.class);
-            Call<Photos> call = mFlickrService.getFlickrPhotos();
-            new FetchItemsTask().execute(call);
+            Call<FlickrResponse> call = mFlickrService.getFlickrPhotos();
+            //this is telling retrofit to take the network call and put it in a queue. This replaces the Asynctask.
+            call.enqueue(new Callback<FlickrResponse>() {
+                @Override
+                public void onResponse(Response<FlickrResponse> response) { // this is a replacement for onPostExecute()
+                    mItems = response.body(); //the "body" is all of the text you get back.
+                    setupAdapter();
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+
+                }
+            });
     }
 
     @Override
@@ -55,34 +65,12 @@ public class PhotoGalleryFragment extends Fragment {
 
     private void setupAdapter(){
         if (isAdded()){ //this confirms that the fragment has been added to the activity, and that the activity will not be null
-            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems.getPhoto()));
+            mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems.getPhotos().getPhoto()));
         }
     }
 
     //third parameter is the result produced by AsyncTask. It sets the value returned by doInBackground,
     //as wellas the type of onPostExecute's input parameter
-    public class FetchItemsTask extends AsyncTask<Call,Void, Photos>{
-        @Override
-        protected Photos doInBackground(Call... params){
-            try {
-                Call<Photos> call = params[0];
-                Response<Photos> response = call.execute();
-                return response.body();
-            } catch (IOException ioe){
-                Log.e(TAG, "Failed to fetch items", ioe);
-            }
-            return null;
-        }
-
-        //onPostExecute is run on the main thread, after doInBackground completes
-        //accepts as input the list you fetched and returned inside doInBackground(...), puts it in mItems,
-        //and updates the adapter
-        @Override
-        protected void onPostExecute(Photos items){
-            mItems = items;
-            setupAdapter();
-        }
-    }
 
     private class PhotoHolder extends RecyclerView.ViewHolder {
         private TextView mTitleTextView;

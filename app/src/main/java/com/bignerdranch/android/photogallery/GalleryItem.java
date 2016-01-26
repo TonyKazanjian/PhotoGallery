@@ -10,7 +10,7 @@ public class GalleryItem {
 
     @Override
     public String toString(){
-        return title;
+        return title + " (" + id +")";
     }
 
     public String getCaption() {
