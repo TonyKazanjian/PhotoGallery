@@ -1,13 +1,18 @@
 package com.bignerdranch.android.photogallery;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import android.net.Uri;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,8 +20,10 @@ import java.util.List;
  */
 public class FlickrFetchr {
 
+    private static final String TAG = "FlickrFetchr";
+
     private static final String API_KEY = "5907a0314289bdcdb382af38cc33d6dc";
-    private static final String flickrAPI = "https://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key="+API_KEY+"&format=json&nojsoncallback=1";
+    private static final String flickrAPI = "https://api.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key="+API_KEY+"&page&format=json&nojsoncallback=1";
 
     public byte[] getUrlBytes(String urlSpec) throws IOException {
         //creates URL object from a string (i.e. www.bignerdranch.com)
@@ -51,20 +58,65 @@ public class FlickrFetchr {
         return new String (getUrlBytes(urlSpec));
     }
 
-    public List<FlickrResponse.PhotosEntity.PhotoEntity> fetchItems(){
+    public List<FlickrResponse.PhotosEntity.PhotoEntity> fetchItems(int page){
 
 
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gson = gsonBuilder.create();
+//        GsonBuilder gsonBuilder = new GsonBuilder();
+//        Gson gson = gsonBuilder.create();
+//
+//        FlickrResponse flickrResponse = null;
+//
+//        try {
+//            flickrResponse = gson.fromJson(getUrlString(flickrAPI), FlickrResponse.class);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return flickrResponse.getPhotos().getPhoto();
 
-        FlickrResponse flickrResponse = null;
-
+        List<FlickrResponse.PhotosEntity.PhotoEntity> items = new ArrayList<>();
         try {
-            flickrResponse = gson.fromJson(getUrlString(flickrAPI), FlickrResponse.class);
-        } catch (IOException e) {
-            e.printStackTrace();
+            String url = Uri.parse("https://api.flickr.com/services/rest/")
+                    .buildUpon()
+                    .appendQueryParameter("method", "flickr.photos.getRecent")
+                    .appendQueryParameter("api_key", API_KEY)
+                    .appendQueryParameter("format", "json")
+                    .appendQueryParameter("nojsoncallback", "1")
+                    .appendQueryParameter("extras", "url_s")
+                    .appendQueryParameter("page",Integer.toString(page))
+                    .build().toString();
+            String jsonString = getUrlString(url);
+            Log.i(TAG, "Received JSON: " + jsonString);
+            //parses JSON text into corresponding Java object
+            JSONObject jsonBody = new JSONObject(jsonString);
+            parseItems(items, jsonBody);
+        } catch (JSONException je){
+            Log.e(TAG, "Failed to parse JSON", je);
+        } catch (IOException ioe){
+            Log.e(TAG, "Failed to fetch items", ioe);
         }
 
-        return flickrResponse.getPhotos().getPhoto();
+        return items;
+    }
+
+    public void parseItems(List<FlickrResponse.PhotosEntity.PhotoEntity> items, JSONObject jsonBody)
+            throws IOException, JSONException {
+        JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
+        JSONArray photoJsonArray = photosJsonObject.getJSONArray("photo");
+
+        for (int i = 0; i < photoJsonArray.length(); i++) {
+            JSONObject photoJsonObject = photoJsonArray.getJSONObject(i);
+
+            FlickrResponse.PhotosEntity.PhotoEntity item = new FlickrResponse.PhotosEntity.PhotoEntity();
+            item.setId(photoJsonObject.getString("id"));
+            item.setTitle(photoJsonObject.getString("title"));
+
+            if (!photoJsonObject.has("url_s")) {
+                continue;
+            }
+
+            item.setUrl(photoJsonObject.getString("url_s"));
+            items.add(item);
+        }
     }
 }

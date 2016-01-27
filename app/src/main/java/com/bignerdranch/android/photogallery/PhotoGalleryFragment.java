@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView mPhotoRecyclerView;
     private List<FlickrResponse.PhotosEntity.PhotoEntity> mItems = new ArrayList<>();
+    private int lastFetchedPage = 1;
 
     public static PhotoGalleryFragment newInstance(){
         return new PhotoGalleryFragment();
@@ -43,10 +45,48 @@ public class PhotoGalleryFragment extends Fragment {
         mPhotoRecyclerView = (RecyclerView)v.findViewById(R.id.fragment_photo_gallery_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
 
+        //Challenge 2
+        mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+            boolean isScrollToBottom = false;
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+
+                PhotoAdapter adapter = (PhotoAdapter)recyclerView.getAdapter();
+                int lastPosition = adapter.getLastBoundPosition();
+
+                GridLayoutManager gridLayoutManager = (GridLayoutManager)recyclerView.getLayoutManager();
+
+                int loadBufferPosition = 1;
+                if(lastPosition >= adapter.getItemCount() - gridLayoutManager.getSpanCount() - loadBufferPosition){
+                    new FetchItemsTask().execute(lastPosition + 1);
+                }
+
+            }
+//
+//                if (newState == RecyclerView.SCROLL_STATE_IDLE){
+//                    int lastItemPostition = gridLayoutManager.findLastCompletelyVisibleItemPosition();
+//                    int totalItemsNumber = gridLayoutManager.getItemCount();
+//
+//                    if (lastItemPostition == (totalItemsNumber -1) && isScrollToBottom && !backgroundIsLoading){
+//                        Log.i(TAG, "New page is loading. There are "
+//                                + String.valueOf(totalItemsNumber) + " total items");
+//                        Toast.makeText(getActivity(), "Items are loading", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+            }
+        });
+
         setupAdapter();
 
         return v;
     }
+
 
     private void setupAdapter(){
         if (isAdded()){ //this confirms that the fragment has been added to the activity, and that the activity will not be null
@@ -56,10 +96,11 @@ public class PhotoGalleryFragment extends Fragment {
 
     //third parameter is the result produced by AsyncTask. It sets the value returned by doInBackground,
     //as wellas the type of onPostExecute's input parameter
-    private class FetchItemsTask extends AsyncTask<Void,Void,List<FlickrResponse.PhotosEntity.PhotoEntity>>{
+    private class FetchItemsTask extends AsyncTask<Integer,Void,List<FlickrResponse.PhotosEntity.PhotoEntity>>{
         @Override
-        protected List<FlickrResponse.PhotosEntity.PhotoEntity> doInBackground(Void... params){
-            return new FlickrFetchr().fetchItems();
+        protected List<FlickrResponse.PhotosEntity.PhotoEntity> doInBackground(Integer... params){
+
+            return new FlickrFetchr().fetchItems(params[1]);
         }
 
         //onPostExecute is run on the main thread, after doInBackground completes
@@ -67,8 +108,15 @@ public class PhotoGalleryFragment extends Fragment {
         //and updates the adapter
         @Override
         protected void onPostExecute(List<FlickrResponse.PhotosEntity.PhotoEntity> items){
-            mItems = items;
-            setupAdapter();
+            if(lastFetchedPage >1){
+                mItems.addAll(items);
+                mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
+            }
+            else{
+                mItems = items;
+                setupAdapter();
+            }
+            lastFetchedPage++;
         }
     }
 
@@ -89,6 +137,11 @@ public class PhotoGalleryFragment extends Fragment {
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder>{
 
         private List<FlickrResponse.PhotosEntity.PhotoEntity> mPhotoEntities;
+        private int lastBoundPosition;
+
+        public int getLastBoundPosition(){
+            return lastBoundPosition;
+        }
 
         public PhotoAdapter(List<FlickrResponse.PhotosEntity.PhotoEntity> photoEntities){
             mPhotoEntities = photoEntities;
@@ -104,6 +157,8 @@ public class PhotoGalleryFragment extends Fragment {
         public void onBindViewHolder(PhotoHolder holder, int position) {
             FlickrResponse.PhotosEntity.PhotoEntity photoEntity= mPhotoEntities.get(position);
             holder.bindGalleryItem(photoEntity);
+            lastBoundPosition = position;
+            Log.i(TAG,"Last bound position is " + Integer.toString(lastBoundPosition));
 
         }
 

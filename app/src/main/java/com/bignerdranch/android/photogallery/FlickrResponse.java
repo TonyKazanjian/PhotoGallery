@@ -90,6 +90,7 @@ public class FlickrResponse {
         public static class PhotoEntity {
             private String id;
             private String title;
+            private String url;
 
             public void setId(String id) {
                 this.id = id;
@@ -110,6 +111,14 @@ public class FlickrResponse {
 
             public String getTitle() {
                 return title;
+            }
+
+            public String getUrl() {
+                return url;
+            }
+
+            public void setUrl(String url) {
+                this.url = url;
             }
         }
     }
