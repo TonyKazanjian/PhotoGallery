@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.support.v4.util.LruCache;
 import android.util.Log;
 
 import java.io.IOException;
@@ -17,6 +18,9 @@ import java.util.concurrent.ConcurrentMap;
  * Created by tonyk_000 on 3/10/2016.
  */
 public class ThumbnailDownloader<T> extends HandlerThread {
+
+    private LruCache mMemoryCache;
+
     private static final String TAG = "ThumbnailDownloader";
     //used to identify messages as download requests
     private static final int MESSAGE_DOWNLOAD = 0;
@@ -29,7 +33,7 @@ public class ThumbnailDownloader<T> extends HandlerThread {
 
     //to hold the Handler from the main thread. Interface is to communicate the response to the main thread
     private Handler mResponseHandler;
-    private ThumbnailDownloadListener<T> mThumbnailDownlaodListener;
+    private ThumbnailDownloadListener<T> mThumbnailDownloadListener;
 
     /*
     Will be called when an image has fully downlaoded and ready to be added to UI.
@@ -41,12 +45,43 @@ public class ThumbnailDownloader<T> extends HandlerThread {
     }
 
     public void setThumbnailDownloadListener(ThumbnailDownloadListener<T> listener){
-        mThumbnailDownlaodListener = listener;
+        mThumbnailDownloadListener = listener;
     }
 
     public ThumbnailDownloader(Handler responseHandler){
         super(TAG);
         mResponseHandler = responseHandler;
+        mMemoryCache = buildCache();
+    }
+
+    // Get max available VM memory, exceeding this amount will throw an
+    // OutOfMemory exception. Stored in kilobytes as LruCache takes an
+    // int in its constructor.
+    public LruCache buildCache(){
+        final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+
+        // Use 1/8th of the available memory for this memory cache.
+        final int cacheSize = maxMemory / 8;
+
+        mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+            @Override
+            protected int sizeOf(String key, Bitmap bitmap) {
+                // The cache size will be measured in kilobytes rather than
+                // number of items.
+                return bitmap.getByteCount() / 1024;
+            }
+        };
+        return mMemoryCache;
+    }
+
+    public void addBitmapToMemoryCache(String key, Bitmap bitmap) {
+        if (getBitmapFromMemCache(key) == null) {
+            mMemoryCache.put(key, bitmap);
+        }
+    }
+
+    public Bitmap getBitmapFromMemCache(String key) {
+        return (Bitmap) mMemoryCache.get(key);
     }
 
     /*
@@ -102,7 +137,10 @@ public class ThumbnailDownloader<T> extends HandlerThread {
                     }
                     //removes PhotoHolder-URL mapping and sets the bitmap to the PhotoHolder
                     mRequestMap.remove(target);
-                    mThumbnailDownlaodListener.onThumbnailDownloaded(target, bitmap);
+
+                    if (bitmap!= null) {
+                        mThumbnailDownloadListener.onThumbnailDownloaded(target, bitmap);
+                    }
                 }
             });
         } catch (IOException ioe){
