@@ -39,6 +39,7 @@ public class PhotoGalleryFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         //retains the fragment so taht rotation does not repeatedly fire off new AsyncTasks to fetch data
         setRetainInstance(true);
         //this starts the AsyncTask and fires up the background thread and calls doInBackground
@@ -125,7 +126,13 @@ public class PhotoGalleryFragment extends Fragment {
     private class FetchItemsTask extends AsyncTask<Void,Void,List<GalleryItem>>{
         @Override
         protected List<GalleryItem> doInBackground(Void... params){
-            return new FlickrFetchr().fetchItems();
+            String query = "robot"; //just for testing
+
+            if (query == null){
+                return new FlickrFetchr().fetchRecentPhotos();
+            } else {
+                return new FlickrFetchr().searchPhotos(query);
+            }
         }
 
         //onPostExecute is run on the main thread, after doInBackground completes

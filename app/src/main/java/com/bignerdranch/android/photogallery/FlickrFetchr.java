@@ -20,6 +20,7 @@ import java.util.List;
  */
 public class FlickrFetchr {
 
+    //Constants for the reusable pieces of the URL
     private static final String TAG = "FlickrFetchr";
     private static final String API_KEY = "5907a0314289bdcdb382af38cc33d6dc";
     private static final String FETCH_RECENT_METHOD = "flickr.photos.getRecent";
@@ -69,26 +70,18 @@ public class FlickrFetchr {
 
     public List<GalleryItem> fetchRecentPhotos(){
         String url = buildUrl(FETCH_RECENT_METHOD, null);
-        return fetchItems();
+        return downloadGalleryItems(url);
     }
 
     public List<GalleryItem> searchPhotos(String query){
         String url = buildUrl(SEARCH_METHOD, query);
-        return fetchItems();
+        return downloadGalleryItems(url);
     }
 
-    public List<GalleryItem> fetchItems(){
+   private List<GalleryItem> downloadGalleryItems(String url){
 
         List<GalleryItem> items = new ArrayList<>();
         try {
-            String url = Uri.parse("https://api.flickr.com/services/rest/")
-                    .buildUpon()
-                    .appendQueryParameter("method", "flickr.photos.getRecent")
-                    .appendQueryParameter("api_key", API_KEY)
-                    .appendQueryParameter("format", "json")
-                    .appendQueryParameter("nojsoncallback", "1")
-                    .appendQueryParameter("extras", "url_s")
-                    .build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
             //parses JSON text into corresponding Java object
@@ -103,10 +96,13 @@ public class FlickrFetchr {
         return items;
     }
 
+    //to build URL
     private String buildUrl(String method, String query){
+        //dynamically fills the method parameter value
         Uri.Builder uriBuilder = ENDPOINT.buildUpon()
                 .appendQueryParameter("method", method);
 
+        //appends value if specified method parameter is search
         if(method.equals(SEARCH_METHOD)){
             uriBuilder.appendQueryParameter("text",query);
         }
