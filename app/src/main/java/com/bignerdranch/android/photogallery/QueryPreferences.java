@@ -25,6 +25,7 @@ public class QueryPreferences {
                 .apply();
     }
 
+    //check what the last result fetched was for the PollService
     public static String getLastResultId(Context context){
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(PREF_LAST_RESULT_ID, null);

@@ -21,7 +21,7 @@ import java.util.List;
 public class PollService extends IntentService {
     private static final String TAG = "PollService";
 
-    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_DAY;
+    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
 
     public static Intent newIntent(Context context){
         return new Intent(context, PollService.class);
@@ -32,11 +32,14 @@ public class PollService extends IntentService {
      */
     public static void setServiceAlarm(Context context, boolean isOn){
         Intent i = PollService.newIntent(context);
+        //PendingIntent tells AlarmManager what intent to send
         PendingIntent pi = PendingIntent.getService(context, 0, i, 0);
 
         AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
 
         if (isOn){
+            //setInexactRepeating allows the system to batch your alarm up with others to minimize wake time,
+            //hence time between repetitions is not exact
             alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME,
                     SystemClock.elapsedRealtime(), POLL_INTERVAL, pi);
         } else {
@@ -57,6 +60,7 @@ public class PollService extends IntentService {
     public PollService(){
         super(TAG);
     }
+
     @Override
     protected void onHandleIntent(Intent intent) {
 
@@ -91,17 +95,18 @@ public class PollService extends IntentService {
             Log.i(TAG, "Got a new result: " + resultId);
 
             //creating notification to notify user of new result
-
             Resources resources = getResources();
             Intent i = PhotoGalleryActivity.newIntent(this);
             PendingIntent pi = PendingIntent.getActivity(this, 0, i, 0);
 
+            //creates notification and calles NotificationManager
             Notification notification = new NotificationCompat.Builder(this)
                     .setTicker(resources.getString(R.string.new_pictures_title))
                     .setSmallIcon(android.R.drawable.ic_menu_report_image)
                     .setContentTitle(resources.getString(R.string.new_pictures_title))
                     .setContentText(resources.getString(R.string.new_pictures_text))
                     .setContentIntent(pi)
+                    //with setAutoCancel, the notification is deleted from the drawer when the user presses it
                     .setAutoCancel(true)
                     .build();
 
