@@ -1,5 +1,6 @@
 package com.bignerdranch.android.photogallery;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -17,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 
 import java.util.ArrayList;
@@ -103,6 +105,8 @@ public class PhotoGalleryFragment extends Fragment {
                 Log.d(TAG, "QueryTextSubmit: " + query);
                 QueryPreferences.setStoredQuery(getActivity(),query);
                 updateItems();
+                hideKeyboard(searchView);
+                searchView.onActionViewCollapsed();
                 return true;
             }
 
@@ -154,6 +158,12 @@ public class PhotoGalleryFragment extends Fragment {
         if (isAdded()){ //this confirms that the fragment has been added to the activity, and that the activity will not be null
             mPhotoRecyclerView.setAdapter(new PhotoAdapter(mItems));
         }
+    }
+
+    //to access soft keyboard and hide it
+    public void hideKeyboard(View v) {
+        final InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(),0);
     }
 
     //third parameter is the result produced by AsyncTask. It sets the value returned by doInBackground,
