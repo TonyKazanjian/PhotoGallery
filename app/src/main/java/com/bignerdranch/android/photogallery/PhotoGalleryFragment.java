@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -43,8 +44,7 @@ public class PhotoGalleryFragment extends Fragment {
         //retains the fragment so taht rotation does not repeatedly fire off new AsyncTasks to fetch data
         setRetainInstance(true);
         //this starts the AsyncTask and fires up the background thread and calls doInBackground
-        new FetchItemsTask().execute();
-
+        updateItems();
         //passes main thread Handler to ThumbnailDownloader, then sets the listner to handle the downloaded image
         //because Handler is created in onCreate(), it's attached to main thread's looper
         Handler responseHandler = new Handler();
@@ -94,6 +94,32 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreateOptionsMenu(menu, menuInflater);
         menuInflater.inflate(R.menu.fragment_photo_gallery, menu);
 
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        final SearchView searchView = (SearchView)searchItem.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Log.d(TAG, "QueryTextSubmit: " + query);
+                QueryPreferences.setStoredQuery(getActivity(),query);
+                updateItems();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d(TAG, "QueryTextChange: " + newText);
+                return false;
+            }
+        });
+
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String query = QueryPreferences.getStoredQuery(getActivity());
+                searchView.setQuery(query, false);
+            }
+        });
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggling_polling);
         if (PollService.isServiceAlarmOn(getActivity())){
             toggleItem.setTitle(R.string.stop_polling);
@@ -102,9 +128,18 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
+    private void updateItems(){
+        String query = QueryPreferences.getStoredQuery(getActivity());
+        new FetchItemsTask(query).execute();
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()) {
+            case R.id.menu_item_clear:
+                QueryPreferences.setStoredQuery(getActivity(), null);
+                updateItems();
+                return true;
             case R.id.menu_item_toggling_polling:
                 boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
                 PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
@@ -124,14 +159,20 @@ public class PhotoGalleryFragment extends Fragment {
     //third parameter is the result produced by AsyncTask. It sets the value returned by doInBackground,
     //as wellas the type of onPostExecute's input parameter
     private class FetchItemsTask extends AsyncTask<Void,Void,List<GalleryItem>>{
+
+        private String mQuery;
+
+        //this constructor executes the query, calling the searchPhotos() method
+        public FetchItemsTask(String query){
+            mQuery = query;
+        }
         @Override
         protected List<GalleryItem> doInBackground(Void... params){
-            String query = "robot"; //just for testing
 
-            if (query == null){
+            if (mQuery == null){
                 return new FlickrFetchr().fetchRecentPhotos();
             } else {
-                return new FlickrFetchr().searchPhotos(query);
+                return new FlickrFetchr().searchPhotos(mQuery);
             }
         }
 

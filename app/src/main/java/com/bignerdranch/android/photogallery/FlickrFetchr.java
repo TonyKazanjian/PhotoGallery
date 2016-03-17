@@ -68,6 +68,7 @@ public class FlickrFetchr {
         return new String (getUrlBytes(urlSpec));
     }
 
+    //methods to call the API methods to start downloading
     public List<GalleryItem> fetchRecentPhotos(){
         String url = buildUrl(FETCH_RECENT_METHOD, null);
         return downloadGalleryItems(url);
