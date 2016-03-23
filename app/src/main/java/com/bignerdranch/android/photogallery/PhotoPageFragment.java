@@ -1,5 +1,6 @@
 package com.bignerdranch.android.photogallery;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -56,29 +57,44 @@ public class PhotoPageFragment extends VisibleFragment {
             //rather than doing anything with it yourself.
             //We override the default implementation in order to use our own webview
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                if (!url.startsWith("http")) {
+                    Intent i= new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(i);
+                    return true;
+                }
                 return false;
             }
         });
 
         //To hook up progressbar, we need WebView's WebChromeClient callback, which is an interface
         //for reacting to events that should change elements of Chrome around the browser
-        mWebView.setWebChromeClient(new WebChromeClient(){
+        mWebView.setWebChromeClient(new WebChromeClient() {
             //for progress updates
-            public void onProgressChanged(WebView webView, int newProgress){
-                if (newProgress == 100){
+            public void onProgressChanged(WebView webView, int newProgress) {
+                if (newProgress == 100) {
                     mProgressBar.setVisibility(View.GONE);
                 } else {
                     mProgressBar.setVisibility(View.VISIBLE);
                     mProgressBar.setProgress(newProgress);
                 }
             }
+
             //for title updates
-            public void onReceivedTitle(WebView webView, String title){
-                AppCompatActivity activity = (AppCompatActivity)getActivity();
+            public void onReceivedTitle(WebView webView, String title) {
+                AppCompatActivity activity = (AppCompatActivity) getActivity();
                 activity.getSupportActionBar().setSubtitle(title);
             }
         });
         mWebView.loadUrl(mUri.toString());
         return v;
+    }
+
+    public boolean onBackPressed(){
+        if(mWebView.canGoBack()){
+            mWebView.goBack();
+            return true;
+        } else {
+            return false;
+        }
     }
 }
